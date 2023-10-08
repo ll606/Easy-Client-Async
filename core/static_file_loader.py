@@ -38,7 +38,7 @@ class StaticFileLoader:
         
         if any(background.endswith(postfix) for postfix in ('.png', '.jpg')):
             img = Image.open(background)
-            ratio = 0.8
+            ratio = 0.3
             width, height = round(img.width*ratio), round(img.height*ratio)
             img = img.resize((width, height))
             data = BytesIO()

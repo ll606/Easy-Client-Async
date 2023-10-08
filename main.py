@@ -9,6 +9,7 @@ from multiprocessing import Process
 from functools import partial
 import ctypes
 import sys
+import asyncio
 
 
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
@@ -20,7 +21,7 @@ def webui(port, open_browser:bool=True):
             run_async(Engine().run())
         except Exception as e:
             from component.reminder import error_reminder
-            error_reminder(e, 'extra_large')
+            await error_reminder(e, 'extra_large')
             sys.exit(0)
     start_server(web, port=port, auto_open_webbrowser=open_browser, cdn=False)
 
@@ -62,5 +63,5 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         from component.reminder import error_reminder        
-        error_reminder(e, 'extra_large')
+        asyncio.run(error_reminder(e, 'extra_large'))
         sys.exit(0)

@@ -8,7 +8,7 @@ call venv/Scripts/activate.bat
 
 echo this project is building... please wait...
 
-pip install -r requirements.txt
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 echo this project has been set up successfully.
 

@@ -1,7 +1,55 @@
 #pywebio-scope-body {
+    min-width: 100%;
+}
+
+#pywebio-scope-content {
     background: rgba(255, 255, 255, 0.7);
     -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
+    padding: 15px;
+    border-radius: 20px;
+    min-height: 90vh;
+}
+
+#pywebio-scope-sidebar {
+    background: rgba(255, 255, 255, 0.7);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    min-height: 90vh;
+    max-width: 50px;
+    margin-right: 50px;
+    transition: 0.5s;
+    overflow-x: hidden;
+}
+
+.list-group.sidebar {
+    transform: translateX(30px);
+    opacity: 0;
+    transition: 0.5s;
+    padding: 15px;
+    width: 100%;
+    height: 100%;
+}
+
+.list-group.sidebar:hover {
+    transform: translate(0px);
+    opacity: 1;
+}
+
+#pywebio-scope-sidebar:hover {
+    max-width: 200px;
+}
+
+#pywebio-scope-sidebar .list-group-item {
+    border-radius: 10px;
+    margin-top: 20px;
+    text-decoration: none;
+    border-width: 0px;
+}
+
+#pywebio-scope-sidebar .list-group-item[aria-selected="false"] {
+    color: #212529
 }
 
 .card {

@@ -4,12 +4,16 @@ from .view import ViewManager, is_view, ViewBase
 from inspect import getmembers
 from .exceptions import ViewNotFoundError
 from pywebio.output import (
-    put_tabs, put_scope, use_scope
+    put_tabs, put_scope, use_scope,
+    put_row
 )
 from pywebio.session import set_env, run_async
+from component.put_sidebar import put_sidebar, show_tab
+from component.scope_with_class import put_html_scope
 from .static_file_loader import StaticFileLoader
 from types import ModuleType
-from typing import List
+from typing import List, Dict
+import yaml
 from .scopeManager import ScopeManager
 from .login_view import LoginViewHandler
 
@@ -28,10 +32,12 @@ class Engine:
         run: 执行Web应用程序的视图。
 
     """
+    
+    view_path = 'views/'
 
     def __new__(cls) -> 'Engine':
         if not hasattr(cls, 'instance'):
-            set_env(output_max_width='80%')
+            set_env(output_max_width='100%')
             cls.instance = object.__new__(cls)
             cls.instance.scan()
             StaticFileLoader.scan()
@@ -53,17 +59,32 @@ class Engine:
                 'Unable to find view in the module of %s.' % module.__name__
             )
 
-    def scan(self) -> None:
-        path = 'views/'
+    def scan_dir(self, path: str) -> None:
+        if path not in ViewManager.views:
+            ViewManager.views[path] = {}
 
         for each in os.listdir(path):
             dirpath = os.path.join(path, each)
             if os.path.isdir(dirpath):
                 module: ModuleType = self.load_file(os.path.join(path, each, 'view'))
                 view: ViewBase = self.get_view_obj(module)
-                ViewManager.views[each] = view
-
-        ViewManager.close()
+                ViewManager.views[path][each] = view
+            
+            if not os.path.dirname(path) in ViewManager.view_config:
+                with open(os.path.join(path, 'config.yaml'), 'r', encoding='utf8') as f:
+                    ViewManager.view_config[os.path.dirname(path)] = yaml.load(f, yaml.FullLoader)
+            
+    
+    def scan(self):
+        path = self.view_path
+        with open(os.path.join(path, 'config.yaml'), 'r', encoding='utf8') as f:
+            ViewManager.sidebar_config = yaml.load(f, yaml.FullLoader)
+        
+        for folder in os.listdir(path):
+            folder = os.path.join(path, folder)
+            if os.path.isdir(folder):
+                self.scan_dir(folder)
+        
 
     async def run(self) -> None:
         # 登录界面
@@ -73,40 +94,59 @@ class Engine:
             )()):
             continue
         
-        tabs: List[dict] = []
-        for name in ViewManager.views.keys():
-            tabs.append(
-                {
-                    'content': put_scope(name), 
-                    'title': ViewManager.get_view_config().get(name, name)
-                }
-            )
-
-        put_scope('head') 
-        put_scope('body') 
+        put_scope('head')
+        put_html_scope('body', cls='container')
         put_scope('foot')
-        
         with use_scope('head'):
             put_scope('head-message')
-
-        with use_scope('body', clear=True):
-            put_tabs(tabs)
         
-        for name, view in ViewManager.views.items():
-            view: ViewBase
-            try:
-                run_async(use_scope(name, clear=True)(view().render)())
-            except Exception as e:
-                from component.confirm import confirm
-                from pywebio.output import put_markdown
-                from traceback import format_exception
-                error = ''.join(format_exception(e))
-                await confirm(
-                    '⚠ Warning: %s' % e.__class__.__name__,
-                    put_markdown(
-                        '### This error will not crash the programme. '
-                        'However, it will lead to part of the programme'
-                        ' unusable. \n`Error Details:`\n<pre style="background:'
-                        'transparent"> %s </pre>' % error, 
-                    ), size='extra_large'
+        
+        with use_scope('body'):
+            put_html_scope('row-scope', cls='row')
+            with use_scope('row-scope'):
+                put_html_scope('sidebar', cls='col')
+                put_html_scope('content', cls='col')
+                
+        
+        sidebar_data = []
+        folders = [each for each in os.listdir(self.view_path) 
+                       if os.path.isdir(os.path.join(self.view_path, each))]
+        for folder in folders:
+            title = ViewManager.sidebar_config.get(folder, folder)
+            sidebar_data.append({'title': title, 'scope': put_scope(folder)})
+        
+        with use_scope('sidebar'):
+            put_sidebar(sidebar_data, 'content').send()
+        show_tab(folders[0])
+        for menu_item, view_data in ViewManager.views.items():
+            tabs: List[Dict] = []
+            for name in view_data.keys():
+                basename = os.path.basename(name)
+                tabs.append(
+                    {
+                        'content': put_scope(name.replace('/', '-')),
+                        'title': ViewManager.sidebar_config.get(name, name)
+                    }
                 )
+            
+            with use_scope(os.path.basename(menu_item)):
+                put_tabs(tabs)
+        
+            for name, view in view_data.items():
+                view: ViewBase
+                try:
+                    run_async(use_scope(name, clear=True)(view().render)())
+                except Exception as e:
+                    from component.confirm import confirm
+                    from pywebio.output import put_markdown
+                    from traceback import format_exception
+                    error = ''.join(format_exception(e))
+                    await confirm(
+                        '⚠ Warning: %s' % e.__class__.__name__,
+                        put_markdown(
+                            '### This error will not crash the programme. '
+                            'However, it will lead to part of the programme'
+                            ' unusable. \n`Error Details:`\n<pre style="background:'
+                            'transparent"> %s </pre>' % error, 
+                        ), size='extra_large'
+                    )

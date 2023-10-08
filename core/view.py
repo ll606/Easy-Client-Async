@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any
+from typing import Any, Dict
 from types import MappingProxyType
 from .exceptions import InitiationLimitError
 from yaml import load, FullLoader
@@ -46,7 +46,9 @@ class ViewManager:
 
     """
     
-    views: dict[str, ViewBase] = {}
+    views: Dict[str, Dict[str, ViewBase]] = {}
+    view_config: Dict[str, Dict[str, str]] = {}
+    sidebar_config: Dict[str, str] = {}
     
     def __new__(cls) -> 'ViewManager':
         raise InitiationLimitError(
@@ -56,10 +58,6 @@ class ViewManager:
     @classmethod
     def close(cls) -> None:
         cls.views = MappingProxyType(cls.views)
+        cls.view_config = MappingProxyType(cls.view_config)
+        cls.sidebar_config = MappingProxyType(cls.sidebar_config)
     
-    @classmethod
-    def get_view_config(cls) -> dict[str, str]:
-        if not hasattr(cls, 'view_config'):
-            with open('views/config.yaml', 'r', encoding='utf8') as f:
-                cls.view_config = load(f.read(), FullLoader)
-        return cls.view_config
