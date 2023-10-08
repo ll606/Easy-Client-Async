@@ -49,6 +49,7 @@ class ViewManager:
     views: Dict[str, Dict[str, ViewBase]] = {}
     view_config: Dict[str, Dict[str, str]] = {}
     sidebar_config: Dict[str, str] = {}
+    sidebar_icons: Dict[str, str] = {}
     
     def __new__(cls) -> 'ViewManager':
         raise InitiationLimitError(

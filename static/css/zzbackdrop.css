@@ -20,14 +20,14 @@
     max-width: 50px;
     margin-right: 50px;
     transition: 0.5s;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 .list-group.sidebar {
-    transform: translateX(30px);
-    opacity: 0;
+    transform: translateX(35px);
+    display: none;
     transition: 0.5s;
-    padding: 15px;
+    padding: 0px;
     width: 100%;
     height: 100%;
 }
@@ -50,6 +50,11 @@
 
 #pywebio-scope-sidebar .list-group-item[aria-selected="false"] {
     color: #212529
+}
+
+#pywebio-scope-sidebar .list-group-item .sidebar-icon {
+    position: absolute;
+    transform: translateX(-52px);
 }
 
 .card {

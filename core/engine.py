@@ -4,8 +4,7 @@ from .view import ViewManager, is_view, ViewBase
 from inspect import getmembers
 from .exceptions import ViewNotFoundError
 from pywebio.output import (
-    put_tabs, put_scope, use_scope,
-    put_row
+    put_tabs, put_scope, use_scope
 )
 from pywebio.session import set_env, run_async
 from component.put_sidebar import put_sidebar, show_tab
@@ -70,9 +69,12 @@ class Engine:
                 view: ViewBase = self.get_view_obj(module)
                 ViewManager.views[path][each] = view
             
-            if not os.path.dirname(path) in ViewManager.view_config:
+            if not os.path.basename(path) in ViewManager.view_config:
                 with open(os.path.join(path, 'config.yaml'), 'r', encoding='utf8') as f:
-                    ViewManager.view_config[os.path.dirname(path)] = yaml.load(f, yaml.FullLoader)
+                    ViewManager.view_config[os.path.basename(path)] = yaml.load(f, yaml.FullLoader)
+                    
+            if os.path.isfile(os.path.join(path, os.path.basename(path)+'.svg')):
+                ViewManager.sidebar_icons[os.path.basename(path)] = os.path.join(path, os.path.basename(path)+'.svg')
             
     
     def scan(self):
@@ -113,7 +115,8 @@ class Engine:
                        if os.path.isdir(os.path.join(self.view_path, each))]
         for folder in folders:
             title = ViewManager.sidebar_config.get(folder, folder)
-            sidebar_data.append({'title': title, 'scope': put_scope(folder)})
+            icon = ViewManager.sidebar_icons.get(folder)
+            sidebar_data.append({'title': title, 'scope': put_scope(folder), 'icon': icon})
         
         with use_scope('sidebar'):
             put_sidebar(sidebar_data, 'content').send()
@@ -121,11 +124,11 @@ class Engine:
         for menu_item, view_data in ViewManager.views.items():
             tabs: List[Dict] = []
             for name in view_data.keys():
-                basename = os.path.basename(name)
+                basename = os.path.basename(menu_item)
                 tabs.append(
                     {
                         'content': put_scope(name.replace('/', '-')),
-                        'title': ViewManager.sidebar_config.get(name, name)
+                        'title': ViewManager.view_config.get(basename, {name:name})[name]
                     }
                 )
             

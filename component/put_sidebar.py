@@ -5,6 +5,7 @@ from pywebio.io_ctrl import output_register_callback
 from typing import Sequence, Union, Callable, Optional
 from dominate import tags
 from dominate.util import raw
+from dominate import svg
 
 def _sidebar_content_scope_wrapper(scope: Output, scopename: str) -> Output:
     tpl = '''
@@ -38,11 +39,16 @@ def put_sidebar(contents: Sequence[Dict[str, Union[Output, Callable]]], content_
         scope = data['scope']
         text = data['title']
         callback: Optional[Callable] = data.get('callback')
+        icon = data.get('icon')
+        if icon is not None:
+            with open(icon, 'r', encoding='utf8') as f:
+                icon = f.read()
+            icon = tags.span(raw(icon), cls='sidebar-icon text-nowrap')
         scopename = scope.spec['dom_id']
         scope.spec['scope'] = 'pywebio-scope-%s' % content_scope
         scopes[scopename] = scope
         sidebar += tags.a(
-            text, 
+            text if icon is None else (raw(icon.render()+tags.span(text).render())), 
             cls='list-group-item list-group-item-action',
             id='list-%s-list' % scopename,
             href='#list-%s' % scopename,
