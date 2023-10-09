@@ -1,3 +1,20 @@
+/* Works on Firefox */
+* {
+    scrollbar-width: thin;
+  }
+  /* Works on Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+    width: 7px;
+}
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+    background-color: gray;
+    border-radius: 20px;
+    border: 2px
+}
+
 #pywebio-scope-body {
     min-width: 100%;
 }
@@ -9,6 +26,8 @@
     padding: 15px;
     border-radius: 20px;
     min-height: 90vh;
+    max-height: 90vh;
+    overflow: auto;
 }
 
 #pywebio-scope-sidebar {
@@ -25,20 +44,15 @@
 
 .list-group.sidebar {
     transform: translateX(35px);
-    display: none;
     transition: 0.5s;
     padding: 0px;
-    width: 100%;
+    width: 80%;
     height: 100%;
-}
-
-.list-group.sidebar:hover {
-    transform: translate(0px);
-    opacity: 1;
 }
 
 #pywebio-scope-sidebar:hover {
     max-width: 200px;
+    overflow-y: auto;
 }
 
 #pywebio-scope-sidebar .list-group-item {
@@ -52,10 +66,6 @@
     color: #212529
 }
 
-#pywebio-scope-sidebar .list-group-item .sidebar-icon {
-    position: absolute;
-    transform: translateX(-52px);
-}
 
 .card {
     background: rgba(255, 255, 255, 0.7);

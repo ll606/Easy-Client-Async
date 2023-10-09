@@ -119,7 +119,7 @@ class Engine:
             sidebar_data.append({'title': title, 'scope': put_scope(folder), 'icon': icon})
         
         with use_scope('sidebar'):
-            put_sidebar(sidebar_data, 'content').send()
+            put_sidebar(sidebar_data, 'content')
         show_tab(folders[0])
         for menu_item, view_data in ViewManager.views.items():
             tabs: List[Dict] = []
