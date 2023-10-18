@@ -3,7 +3,6 @@ from component.put_input import put_input
 from .login_manager import LoginManager
 from pywebio.pin import pin
 from pywebio.output import put_error, put_success, use_scope
-from pywebio.session import run_async
 
 
 class LoginViewHandler(BaseFormHandler):
@@ -12,9 +11,9 @@ class LoginViewHandler(BaseFormHandler):
         self.title = '登录'
         self.style = {
             'margin-top': '100px', 
-            'margin-left': '18.75%',
-            'margin-right': '18.75%',
-            'width': '62.5%'
+            'margin-left': '27.5%',
+            'margin-right': '27.5%',
+            'width': '45%'
         }
         
     async def all_inputs_valid(self):

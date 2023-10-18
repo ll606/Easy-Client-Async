@@ -15,6 +15,10 @@
     border: 2px
 }
 
+body {
+    overflow-y: hidden;
+}
+
 #pywebio-scope-body {
     min-width: 100%;
 }
