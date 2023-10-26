@@ -1,16 +1,23 @@
-from pywebio import start_server, config
-from pywebio.session import defer_call, run_async
-from pywebio.utils import get_free_port
-from core.engine import Engine
-from typing import Literal
-import click
-import webview
-from multiprocessing import Process
-from functools import partial
+import asyncio
 import ctypes
 import sys
-import asyncio
+import threading
+import webbrowser
+from functools import partial
+from multiprocessing import Process
+from typing import Literal
 
+import click
+import tornado
+import webview
+from pywebio import config
+from pywebio.platform.tornado import wait_host_port, webio_handler
+from pywebio.session import defer_call, run_async
+from pywebio.utils import STATIC_PATH, get_free_port
+
+from core.engine import Engine
+from core.interfaces import InterfaceLoader
+from core.logger import Logger
 
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 def webui(port, open_browser:bool=True):
@@ -23,12 +30,37 @@ def webui(port, open_browser:bool=True):
             from component.reminder import error_reminder
             await error_reminder(e, 'extra_large')
             sys.exit(0)
-    start_server(web, port=port, auto_open_webbrowser=open_browser, cdn=False)
+    InterfaceLoader.load()
+    interfaces = [(k,v) for k,v in InterfaceLoader.interfaces.items()]
+    interfaces.append((r'/ui', webio_handler(web, cdn=False)))
+    interfaces.append((
+        r"/(.*)", tornado.web.StaticFileHandler, 
+        {"path": STATIC_PATH, 'default_filename': 'index.html'})
+    )
+    application = tornado.web.Application(interfaces)
+    application.listen(port=port, address='localhost')
+    logger = Logger(name='global', extra={'executor': 'server', 'task':'host server'})
+    logger.info('服务已启动，端口: %s' % port)
+    logger.info('ui界面: http://127.0.0.1:%s/ui' % port)
+    async def open_webbrowser_on_server_started(host, port, path):
+        url = 'http://%s:%s/%s' % (host, port, path)
+        is_open = await wait_host_port(host, port, duration=20)
+        if is_open:
+            logger.info('Try open %s in web browser' % url)
+            threading.Thread(target=webbrowser.open, args=(url,), daemon=True).start()
+        else:
+            logger.error('Open %s in web browser failed.' % url)
+        
+    if open_browser:
+        tornado.ioloop.IOLoop.current().spawn_callback(
+            open_webbrowser_on_server_started, '127.0.0.1', port, 'ui'
+        )
+    tornado.ioloop.IOLoop.current().start()
 
 def local(port):
     webview.create_window(
         'auto-browser-framework-gui', 
-        'http://127.0.0.1:{port}'.format(port=port),
+        'http://127.0.0.1:{port}/ui'.format(port=port),
         width=1280, height=720, min_size=(1280, 720),
         confirm_close=True
     )
