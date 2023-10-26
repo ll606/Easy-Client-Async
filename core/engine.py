@@ -89,19 +89,18 @@ class Engine:
         
 
     async def run(self) -> None:
-        # 登录界面
-        while not await (
-            ScopeManager.temporary_form('body', 'login')(
-                LoginViewHandler()
-            )()):
-            continue
-        
         put_scope('head')
         put_html_scope('body', cls='container')
         put_scope('foot')
         with use_scope('head'):
             put_scope('head-message')
         
+        # 登录界面
+        while not await (
+            ScopeManager.temporary_form('body', 'login')(
+                LoginViewHandler()
+            )()):
+            continue
         
         with use_scope('body'):
             put_html_scope('row-scope', cls='row')
